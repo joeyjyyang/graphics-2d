@@ -6,7 +6,8 @@
 class Planet : public sf::CircleShape
 {
 public:
-    Planet(const float radius, const sf::Color& color, const float position_x, const float position_y, float velocity_x = 0, float velocity_y = 0, float acceleration_x = 0, float acceleration_y = 0) : velocity_(velocity_x, velocity_y), acceleration_(acceleration_x, acceleration_y) 
+    template <typename T>
+    Planet(const T radius, const sf::Color& color, const T position_x, const T position_y, T velocity_x = 0, T velocity_y = 0, T acceleration_x = 0, T acceleration_y = 0) : velocity_(velocity_x, velocity_y), acceleration_(acceleration_x, acceleration_y)
     {
         setRadius(radius);
         setFillColor(color);
@@ -15,23 +16,25 @@ public:
         std::cout << "Planet created at (" << position_x << ", " << position_y << ")" << std::endl;
     }
 
-    const sf::Vector2f& getVelocity() const 
+    sf::Vector2f getVelocity() const
     {
         return velocity_;
     }
 
-    const sf::Vector2f& getAcceleration() const 
+    sf::Vector2f getAcceleration() const
     {
         return acceleration_;
     }
 
-    void setVelocity(const float velocity_x, const float velocity_y) 
+    template<typename T>
+    void setVelocity(const T velocity_x, const T velocity_y)
     {
         velocity_.x = velocity_x;
         velocity_.y = velocity_y;
     }
 
-    void setAcceleration(const float acceleration_x, const float acceleration_y) 
+    template<typename T>
+    void setAcceleration(const T acceleration_x, const T acceleration_y)
     {
         acceleration_.x = acceleration_x;
         acceleration_.y = acceleration_y;
@@ -39,7 +42,7 @@ public:
 
     template <class T>
     void applyMotion(const T dt)
-    {        
+    {
         auto prev_position = getPosition();
         auto prev_velocity = getVelocity();
         auto prev_acceleration = getAcceleration();
@@ -131,7 +134,7 @@ int main(int argc, char const* argv[])
 
         // TO DO: Put in another thread.
         sf::Time elapsed = clock.restart();
-        double dt = elapsed.asSeconds();
+        auto dt = elapsed.asSeconds();
 
         for (auto& planet : planets) {
             planet->applyMotion(dt);
