@@ -132,7 +132,10 @@ int main(int argc, char const* argv[])
 
         window.clear();
 
-        // TO DO: Put in another thread.
+        //
+        // Update window below.
+        // Recommended not to put window drawing in a separate
+        //
         sf::Time elapsed = clock.restart();
         auto dt = elapsed.asSeconds();
 
