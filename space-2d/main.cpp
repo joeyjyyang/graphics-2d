@@ -13,7 +13,7 @@ public:
         setFillColor(color);
         setPosition(position_x, position_y);
 
-        std::cout << "Planet created at (" << position_x << ", " << position_y << ")" << std::endl;
+        std::cout << "Planet created at (" << position_x << ", " << position_y << ")\n";
     }
 
     sf::Vector2f getVelocity() const
@@ -76,7 +76,7 @@ public:
 
     ~Planet() 
     {
-        std::cout << "Planet destroyed." << std::endl;
+        std::cout << "Planet destroyed.\n";
     }
 
 private:
@@ -106,7 +106,6 @@ int main(int argc, char const* argv[])
             switch (event.type)
             {
                 case sf::Event::Closed:
-                    planets.clear();
                     window.close();
                     break;
 
@@ -116,8 +115,7 @@ int main(int argc, char const* argv[])
                 // Need to define scope in case statement to be able to create new variables/objects (e.g. planet)!
                 case sf::Event::MouseButtonReleased:
                 {
-                    //std::cout << "Clicked x: " << event.mouseButton.x << "y: " << event.mouseButton.y << std::endl;
-                    std::unique_ptr<Planet> planet(std::make_unique<Planet>(20, sf::Color::Green, event.mouseButton.x, event.mouseButton.y));
+                    std::unique_ptr<Planet> planet = std::make_unique<Planet>(20, sf::Color::Green, event.mouseButton.x, event.mouseButton.y);
                     planet->setVelocity(50, 50);
                     planet->setAcceleration(100, 100);
                     // Move ownership of std::unique_ptr; cannot copy!
