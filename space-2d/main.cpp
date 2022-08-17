@@ -1,4 +1,5 @@
 #include <iostream>
+#include <thread>
 #include <vector>
 
 #include <SFML/Graphics.hpp>
@@ -87,15 +88,46 @@ private:
 constexpr int WINDOW_LENGTH{800}; //1920;
 constexpr int WINDOW_HEIGHT{600}; //1200;
 
+void renderThread(sf::RenderWindow* window, sf::Clock* clock, std::vector<std::unique_ptr<Planet>>* planets)
+{
+    // Do not need to explicitly activate window; SFML will do it automatically.
+    //window->setActive(true);
+
+    while (window->isOpen())
+    {
+        window->clear();
+
+        sf::Time elapsed = clock->restart();
+        auto dt = elapsed.asSeconds();
+
+        for (auto& planet : *planets) {
+            planet->applyMotion(dt);
+            window->draw(*planet);
+        }
+        
+        window->display();
+    }
+}
+
 int main(int argc, char const* argv[])
 {
+    // Recommended to create window and handle threads (here) in main thread for maximum portability.
+
+    // Create window.
     sf::RenderWindow window(sf::VideoMode(WINDOW_LENGTH, WINDOW_HEIGHT), "Welcome to 2D Space!");
+
+    // Must deactivate window before using in another thread.
+    window.setActive(false);
 
     // Allocate planet elements on heap.
     std::vector<std::unique_ptr<Planet>> planets;
 
     sf::Clock clock;
 
+    // Start rendering thread.
+    std::thread render_thread(renderThread, &window, &clock, &planets);
+
+    // Handle events.
     while (window.isOpen())
     {
         sf::Event event;
@@ -127,23 +159,9 @@ int main(int argc, char const* argv[])
                     break;
             }
         }
-
-        window.clear();
-
-        //
-        // Update window below.
-        // Recommended not to put window drawing in a separate
-        //
-        sf::Time elapsed = clock.restart();
-        auto dt = elapsed.asSeconds();
-
-        for (auto& planet : planets) {
-            planet->applyMotion(dt);
-            window.draw(*planet);
-        }
-        
-        window.display();
     }
+
+    render_thread.join();
 
     return 0;
 }
