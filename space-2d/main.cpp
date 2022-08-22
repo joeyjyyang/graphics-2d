@@ -1,8 +1,13 @@
 #include <iostream>
+#include <mutex>
 #include <thread>
 #include <vector>
 
 #include <SFML/Graphics.hpp>
+// Needs to be included after <SFML/Graphics.hpp>!
+#include <X11/Xlib.h>
+
+std::mutex MTX;
 
 class Planet : public sf::CircleShape
 {
@@ -95,12 +100,15 @@ void renderThread(sf::RenderWindow* window, sf::Clock* clock, std::vector<std::u
 
     while (window->isOpen())
     {
-        window->clear();
+   	window->clear();
 
         sf::Time elapsed = clock->restart();
         auto dt = elapsed.asSeconds();
 
-        for (auto& planet : *planets) {
+	// Critical section; shared resource being planets.	
+	const std::lock_guard<std::mutex> lock(MTX);
+       
+       	for (auto& planet : *planets) {
             planet->applyMotion(dt);
             window->draw(*planet);
         }
@@ -111,6 +119,10 @@ void renderThread(sf::RenderWindow* window, sf::Clock* clock, std::vector<std::u
 
 int main(int argc, char const* argv[])
 {
+    // Breaks cross-platform support! 
+    // Is not reliable, but sometimes needs to calledso X is aware that this is a multi-threaded application.
+    XInitThreads();
+
     // Recommended to create window and handle threads (here) in main thread for maximum portability.
 
     // Create window.
@@ -150,9 +162,12 @@ int main(int argc, char const* argv[])
                     std::unique_ptr<Planet> planet = std::make_unique<Planet>(20, sf::Color::Green, event.mouseButton.x, event.mouseButton.y);
                     planet->setVelocity(50, 50);
                     planet->setAcceleration(100, 100);
-                    // Move ownership of std::unique_ptr; cannot copy!
+
+		    // Critical section; shared resource being planets.
+		    const std::lock_guard<std::mutex> lock(MTX);
+		    // Move ownership of std::unique_ptr; cannot copy!
                     planets.push_back(std::move(planet));
-                    break;
+		    break;
                 }
 
                 default:
