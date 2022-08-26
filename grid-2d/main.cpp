@@ -53,6 +53,25 @@ int main(int argc, char const* argv[])
     // Draw grid.
     while (window.isOpen())
     {
+        sf::Event event;
+
+        while (window.pollEvent(event))
+        {
+            // Handle event using event type.
+            switch (event.type)
+            {
+                case sf::Event::Closed:
+                    window.close();
+                    break;
+
+                case sf::Event::KeyPressed:
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
         window.clear();
         
         for (int i = 0; i < NUM_ROWS; i++)
