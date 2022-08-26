@@ -13,6 +13,16 @@ constexpr int NUM_COLS{16};
 constexpr int OUTLINE_THICKNESS{10};
 constexpr int TILE_LENGTH{WINDOW_LENGTH / NUM_COLS - OUTLINE_THICKNESS};
 constexpr int TILE_HEIGHT{WINDOW_HEIGHT / NUM_ROWS - OUTLINE_THICKNESS};
+constexpr int START_X{0};
+constexpr int START_Y{0};
+constexpr int END_X{7};
+constexpr int END_Y{6};
+
+// Dijkstra Algorithm
+/*
+1. Add starting node to priority queue
+
+*/
 
 int main(int argc, char const* argv[])
 {
@@ -26,9 +36,6 @@ int main(int argc, char const* argv[])
 
     std::vector<std::vector<sf::RectangleShape>> grid(NUM_ROWS, std::vector<sf::RectangleShape>(NUM_COLS, sf::RectangleShape(sf::Vector2f(TILE_LENGTH, TILE_HEIGHT))));
 
-    //sf::RectangleShape tile(sf::Vector2f(TILE_LENGTH, TILE_HEIGHT));
-    //tile.setPosition(500, 500);
-
     int tile_position_x{0};
     int tile_position_y{0};
 
@@ -41,8 +48,23 @@ int main(int argc, char const* argv[])
         {            
             auto& tile = grid[i][j];
             tile.setPosition(tile_position_x, tile_position_y);
-            tile.setOutlineColor(sf::Color::Green);
             tile.setOutlineThickness(OUTLINE_THICKNESS);
+            tile.setOutlineColor(sf::Color::Black);
+
+            // Set start tile.
+            if (i == START_Y && j == START_X)
+            {
+                tile.setFillColor(sf::Color::Green);
+            }
+            // Set end tile.
+            else if (i == END_Y && j == END_X)
+            {
+                tile.setFillColor(sf::Color::Red);
+            }
+            else
+            {
+                tile.setFillColor(sf::Color::White);
+            }
 
             tile_position_x += TILE_LENGTH;
         }
