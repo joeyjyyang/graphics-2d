@@ -86,8 +86,8 @@ public:
     }
 
 private:
-    sf::Vector2f velocity_{0, 0};
-    sf::Vector2f acceleration_{0, 0};
+    sf::Vector2f velocity_;
+    sf::Vector2f acceleration_;
 };
 
 constexpr int WINDOW_LENGTH{800}; //1920;
