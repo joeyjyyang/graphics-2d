@@ -3,9 +3,12 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include <SFML/Graphics.hpp>
+// Needs to be included after <SFML/Graphics.hpp>!
+#include <X11/Xlib.h>
 
 constexpr unsigned int WINDOW_LENGTH{1920};
 constexpr unsigned int WINDOW_HEIGHT{1200};
@@ -138,6 +141,11 @@ public:
         return weights_text_;
     }
 
+    const std::vector<sf::RectangleShape>& getPath()
+    {
+        return path_;
+    }
+
     ~Grid()
     {
         std::cout << "Destroyed grid.\n";
@@ -160,23 +168,82 @@ private:
     std::vector<std::vector<unsigned int>> weights_;
     std::vector<std::vector<sf::Text>> weights_text_;
     sf::Font font_;
+    std::vector<sf::RectangleShape> path_;
 };
+
+/*void renderPath(sf::RenderWindow& window, const std::shared_ptr<Grid> grid)
+{
+    const auto& path = grid->getPath();
+
+    while (window.isOpen())
+    {
+        window.clear();
+        
+        for (int i = 0; i < path.size(); i++)
+        {
+            const auto& tile = path[i];
+            window.draw(tile);
+        }
+        
+        window.display();
+    }
+}*/
+
+void renderGrid(sf::RenderWindow& window, const std::shared_ptr<Grid> grid)
+{
+    while (window.isOpen())
+    {
+        window.clear();
+
+        for (int i = 0; i < NUM_ROWS; i++)
+        {
+            for (int j = 0; j < NUM_COLS; j++)
+            {
+                const auto& cells = grid->getCells();
+                const auto& cell = cells[i][j];
+                window.draw(cell);
+
+                if (grid->show_text_)
+                {
+                    const auto& weights_text = grid->getWeightsText();
+                    const auto& weight_text = weights_text[i][j];
+                    window.draw(weight_text);
+                }
+            }
+        }
+        
+        window.display();
+    }
+}
 
 int main(int argc, char const* argv[])
 {
-    // Recommended to create window and in main thread for maximum portability.
-
     // Make sure cell length and height match; cells needs to be a square!
     assert(CELL_HEIGHT == CELL_LENGTH);
 
-    // Need to allocate grid on heap; otherwise, run out of stack memory!
-    std::unique_ptr<Grid> grid = std::make_unique<Grid>(NUM_ROWS, NUM_COLS, CELL_LENGTH, CELL_HEIGHT, OUTLINE_THICKNESS);
-    grid->setStartCell(START_X, START_Y);
-    grid->setEndCell(END_X, END_Y);
+    // Breaks cross-platform support! 
+    // Is not reliable, but sometimes needs to calledso X is aware that this is a multi-threaded application.
+    XInitThreads();
+
+    // Recommended to create window and in main thread for maximum portability.
 
     // Create window.
     sf::RenderWindow window(sf::VideoMode(WINDOW_LENGTH, WINDOW_HEIGHT), "Welcome to 2D Grid!");
 
+    // Must deactivate window before using in another thread.
+    window.setActive(false);
+
+    // Need to allocate grid on heap; otherwise, run out of stack memory!
+    std::shared_ptr<Grid> grid = std::make_shared<Grid>(NUM_ROWS, NUM_COLS, CELL_LENGTH, CELL_HEIGHT, OUTLINE_THICKNESS);
+    grid->setStartCell(START_X, START_Y);
+    grid->setEndCell(END_X, END_Y);
+
+    std::vector<std::pair<int, int>> path;
+
+    std::thread render_grid_thread(renderGrid, std::ref(window), grid);
+    //std::thread render_path_thread(renderPath, std::ref(window), grid);
+
+    // Event handling in main thread.
     while (window.isOpen())
     {
         sf::Event event;
@@ -197,30 +264,10 @@ int main(int argc, char const* argv[])
                     break;
             }
         }
-
-        // TO DO: Put into separate thread.
-        // Draw grid.
-        window.clear();
-        
-        for (int i = 0; i < NUM_ROWS; i++)
-        {
-            for (int j = 0; j < NUM_COLS; j++)
-            {
-                const auto& cells = grid->getCells();
-                const auto& cell = cells[i][j];
-                window.draw(cell);
-
-                if (grid->show_text_)
-                {
-                    const auto& weights_text = grid->getWeightsText();
-                    const auto& weight_text = weights_text[i][j];
-                    window.draw(weight_text);
-                }
-            }
-        }
-        
-        window.display();
     }
+
+    render_grid_thread.join();
+    //render_path_thread.join();
 
     return 0;
 }
