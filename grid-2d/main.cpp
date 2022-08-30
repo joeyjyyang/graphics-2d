@@ -1,9 +1,8 @@
 #include <cassert>
 #include <climits>
-#include <chrono>
 #include <iostream>
 #include <stdexcept>
-#include <thread>
+#include <string>
 #include <vector>
 
 #include <SFML/Graphics.hpp>
@@ -20,23 +19,23 @@ constexpr unsigned int START_Y{0};
 constexpr unsigned int END_X{7};
 constexpr unsigned int END_Y{6};
 
-// Dijkstra Algorithm
-/*
-1. Add starting node to priority queue
-
-*/
-
 class Grid
 {
 public:
-    Grid(const unsigned int num_rows, const unsigned int num_cols, const unsigned int cell_length, const unsigned int cell_height, const unsigned int outline_thickness) : num_rows_(num_rows), num_cols_(num_cols), cell_length_(cell_length), cell_height_(cell_height), outline_thickness_(outline_thickness), cells_(num_rows_, std::vector<sf::RectangleShape>(num_cols_, sf::RectangleShape(sf::Vector2f(cell_length_, cell_height_)))), weights_(num_rows, std::vector<unsigned int>(num_cols, UINT_MAX)), visited_(num_rows_, std::vector<bool>(num_cols_, false))
+    Grid(const unsigned int num_rows, const unsigned int num_cols, const unsigned int cell_length, const unsigned int cell_height, const unsigned int outline_thickness) : num_rows_(num_rows), num_cols_(num_cols), cell_length_(cell_length), cell_height_(cell_height), outline_thickness_(outline_thickness), cells_(num_rows_, std::vector<sf::RectangleShape>(num_cols_, sf::RectangleShape(sf::Vector2f(cell_length_, cell_height_)))), visited_(num_rows_, std::vector<bool>(num_cols_, false)), weights_(num_rows, std::vector<unsigned int>(num_cols, UINT_MAX)), weights_text_(num_rows, std::vector<sf::Text>(num_cols, sf::Text())), show_text_(true)
     {
-        setCellPositions();
-        loadFont();
+        initializeCellPositions();
+
+        if (show_text_)
+        {
+            loadFont();
+            initializeCellWeightsText();
+        }
+
         std::cout << "Created grid.\n";
     }
 
-    void setCellPositions()
+    void initializeCellPositions()
     {
         unsigned int cell_position_x{0};
         unsigned int cell_position_y{0};
@@ -46,8 +45,10 @@ public:
             cell_position_x = 0;
 
             for (unsigned int j = 0; j < num_cols_; j++)
-            {            
+            {   
+                // Can't be const.
                 auto& cell = cells_[i][j];
+
                 cell.setPosition(cell_position_x, cell_position_y);
                 cell.setOutlineThickness(outline_thickness_);
                 cell.setOutlineColor(sf::Color::Black);
@@ -68,6 +69,29 @@ public:
         }
     }
 
+    void initializeCellWeightsText()
+    {
+        for (unsigned int i = 0; i < num_rows_; i++)
+        {
+            for (unsigned int j = 0; j < num_cols_; j++)
+            {
+                const auto& weight = weights_[i][j];
+                const auto& cell = cells_[i][j];
+                const auto& cell_position = cell.getPosition();
+                // Can't be const.
+                auto& weight_text = weights_text_[i][j];
+
+                weight_text.setFont(font_);
+                weight_text.setString(std::to_string(weight));
+                weight_text.setFillColor(sf::Color::Blue);
+                weight_text.setCharacterSize(16);
+                weight_text.setPosition(cell_position.x, cell_position.y);
+
+                assert(weight_text.getString() == std::to_string(weight));
+            }
+        }
+    }
+
     void setStartCell(const unsigned int start_x, const unsigned int start_y)
     {
         start_x_ = start_x;
@@ -75,6 +99,14 @@ public:
 
         auto& cell = cells_[start_y][start_x];
         cell.setFillColor(sf::Color::Green);
+
+        // Set default weight to 0.
+        weights_[start_y][start_x] = 0;
+        auto& weight_text = weights_text_[start_y][start_x];
+        weight_text.setString(std::to_string(0));
+
+        // Check.
+        assert(weights_text_[start_y][start_x].getString() == std::to_string(weights_[start_y][start_x]));
     }
 
     void setEndCell(const unsigned int end_x, const unsigned int end_y)
@@ -91,10 +123,27 @@ public:
         return cells_;
     }
 
+    const std::vector<std::vector<bool>>& getVisited()
+    {
+        return visited_;
+    }
+
+    const std::vector<std::vector<unsigned int>>& getWeights()
+    {
+        return weights_;
+    }
+
+    const std::vector<std::vector<sf::Text>>& getWeightsText()
+    {
+        return weights_text_;
+    }
+
     ~Grid()
     {
         std::cout << "Destroyed grid.\n";
     }
+
+    bool show_text_;
 
 private:
     const unsigned int num_rows_;
@@ -107,11 +156,11 @@ private:
     unsigned int end_x_;
     unsigned int end_y_;
     std::vector<std::vector<sf::RectangleShape>> cells_;
-    std::vector<std::vector<unsigned int>> weights_;
     std::vector<std::vector<bool>> visited_;
+    std::vector<std::vector<unsigned int>> weights_;
+    std::vector<std::vector<sf::Text>> weights_text_;
     sf::Font font_;
 };
-
 
 int main(int argc, char const* argv[])
 {
@@ -160,6 +209,13 @@ int main(int argc, char const* argv[])
                 const auto& cells = grid->getCells();
                 const auto& cell = cells[i][j];
                 window.draw(cell);
+
+                if (grid->show_text_)
+                {
+                    const auto& weights_text = grid->getWeightsText();
+                    const auto& weight_text = weights_text[i][j];
+                    window.draw(weight_text);
+                }
             }
         }
         
