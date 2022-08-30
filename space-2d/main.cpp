@@ -93,27 +93,27 @@ private:
 constexpr int WINDOW_LENGTH{800}; //1920;
 constexpr int WINDOW_HEIGHT{600}; //1200;
 
-void renderThread(sf::RenderWindow* window, sf::Clock* clock, std::vector<std::unique_ptr<Planet>>* planets)
+void renderThread(sf::RenderWindow& window, sf::Clock& clock, const std::vector<std::unique_ptr<Planet>>& planets)
 {
     // Do not need to explicitly activate window; SFML will do it automatically.
-    //window->setActive(true);
+    //window.setActive(true);
 
-    while (window->isOpen())
+    while (window.isOpen())
     {
-        window->clear();
+        window.clear();
 
-        sf::Time elapsed = clock->restart();
-        auto dt = elapsed.asSeconds();
+        const sf::Time elapsed = clock.restart();
+        const auto dt = elapsed.asSeconds();
         
         // Critical section; shared resource being planets.	
         const std::lock_guard<std::mutex> lock(MTX);
        
-       	for (auto& planet : *planets) {
+       	for (const auto& planet : planets) {
             planet->applyMotion(dt);
-            window->draw(*planet);
+            window.draw(*planet);
         }
         
-        window->display();
+        window.display();
     }
 }
 
@@ -137,7 +137,7 @@ int main(int argc, char const* argv[])
     sf::Clock clock;
 
     // Start rendering thread.
-    std::thread render_thread(renderThread, &window, &clock, &planets);
+    std::thread render_thread(renderThread, std::ref(window), std::ref(clock), std::ref(planets));
 
     // Handle events.
     while (window.isOpen())
