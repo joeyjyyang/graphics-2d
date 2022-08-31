@@ -1,6 +1,8 @@
 #include <cassert>
+#include <chrono>
 #include <climits>
 #include <iostream>
+#include <mutex>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -22,23 +24,25 @@ constexpr unsigned int START_Y{0};
 constexpr unsigned int END_X{7};
 constexpr unsigned int END_Y{6};
 
+std::mutex MTX;
+
 class Grid
 {
 public:
-    Grid(const unsigned int num_rows, const unsigned int num_cols, const unsigned int cell_length, const unsigned int cell_height, const unsigned int outline_thickness) : num_rows_(num_rows), num_cols_(num_cols), cell_length_(cell_length), cell_height_(cell_height), outline_thickness_(outline_thickness), cells_(num_rows_, std::vector<sf::RectangleShape>(num_cols_, sf::RectangleShape(sf::Vector2f(cell_length_, cell_height_)))), visited_(num_rows_, std::vector<bool>(num_cols_, false)), weights_(num_rows, std::vector<unsigned int>(num_cols, UINT_MAX)), weights_text_(num_rows, std::vector<sf::Text>(num_cols, sf::Text())), show_text_(true)
+    Grid(const unsigned int num_rows, const unsigned int num_cols, const unsigned int cell_length, const unsigned int cell_height, const unsigned int outline_thickness) : num_rows_(num_rows), num_cols_(num_cols), cell_length_(cell_length), cell_height_(cell_height), outline_thickness_(outline_thickness), cells_(num_rows_, std::vector<sf::RectangleShape>(num_cols_, sf::RectangleShape(sf::Vector2f(cell_length_, cell_height_)))), visited_(num_rows_, std::vector<bool>(num_cols_, false)), weights_(num_rows, std::vector<unsigned int>(num_cols, UINT_MAX)), weights_text_(num_rows, std::vector<sf::Text>(num_cols, sf::Text())), show_weights_(true), show_path_(true)
     {
-        initializeCellPositions();
+        initializeCells();
 
-        if (show_text_)
+        if (show_weights_)
         {
             loadFont();
-            initializeCellWeightsText();
+            initializeWeightsText();
         }
 
         std::cout << "Created grid.\n";
     }
 
-    void initializeCellPositions()
+    void initializeCells()
     {
         unsigned int cell_position_x{0};
         unsigned int cell_position_y{0};
@@ -72,7 +76,7 @@ public:
         }
     }
 
-    void initializeCellWeightsText()
+    void initializeWeightsText()
     {
         for (unsigned int i = 0; i < num_rows_; i++)
         {
@@ -121,6 +125,17 @@ public:
         cell.setFillColor(sf::Color::Red);
     }
 
+    void addPath(const unsigned int index_x, const unsigned int index_y)
+    {
+        path_.push_back({index_x, index_y});
+
+        if (show_path_)
+        {
+            auto& cell = cells_[index_x][index_y];
+            cell.setFillColor(sf::Color::Blue);
+        }
+    }
+
     const std::vector<std::vector<sf::RectangleShape>>& getCells()
     {
         return cells_;
@@ -141,7 +156,7 @@ public:
         return weights_text_;
     }
 
-    const std::vector<sf::RectangleShape>& getPath()
+    const std::vector<std::pair<unsigned int, unsigned int>>& getPath()
     {
         return path_;
     }
@@ -151,7 +166,8 @@ public:
         std::cout << "Destroyed grid.\n";
     }
 
-    bool show_text_;
+    bool show_weights_;
+    bool show_path_;
 
 private:
     const unsigned int num_rows_;
@@ -167,52 +183,51 @@ private:
     std::vector<std::vector<bool>> visited_;
     std::vector<std::vector<unsigned int>> weights_;
     std::vector<std::vector<sf::Text>> weights_text_;
+    std::vector<std::pair<unsigned int, unsigned int>> path_;
     sf::Font font_;
-    std::vector<sf::RectangleShape> path_;
 };
 
-/*void renderPath(sf::RenderWindow& window, const std::shared_ptr<Grid> grid)
-{
-    const auto& path = grid->getPath();
-
-    while (window.isOpen())
-    {
-        window.clear();
-        
-        for (int i = 0; i < path.size(); i++)
-        {
-            const auto& tile = path[i];
-            window.draw(tile);
-        }
-        
-        window.display();
-    }
-}*/
-
-void renderGrid(sf::RenderWindow& window, const std::shared_ptr<Grid> grid)
+void render(sf::RenderWindow& window, const std::shared_ptr<Grid> grid)
 {
     while (window.isOpen())
     {
         window.clear();
 
-        for (int i = 0; i < NUM_ROWS; i++)
+        for (unsigned int i = 0; i < NUM_ROWS; i++)
         {
-            for (int j = 0; j < NUM_COLS; j++)
+            for (unsigned int j = 0; j < NUM_COLS; j++)
             {
+                // Draw grid.
                 const auto& cells = grid->getCells();
-                const auto& cell = cells[i][j];
-                window.draw(cell);
+                window.draw(cells[i][j]);
 
-                if (grid->show_text_)
+                // Draw weights (optional).
+                if (grid->show_weights_)
                 {
                     const auto& weights_text = grid->getWeightsText();
-                    const auto& weight_text = weights_text[i][j];
-                    window.draw(weight_text);
+                    window.draw(weights_text[i][j]);
                 }
             }
         }
-        
+
         window.display();
+    }
+}
+
+// TO DO: Implement Dijkstra's here.
+unsigned int a = 1;
+unsigned int b = 1;
+void buildPath(std::shared_ptr<Grid> grid)
+{
+    while (true)
+    {
+        grid->addPath(a, b);
+        a++;
+        b++;
+
+        std::cout << a;
+        std::cout << b;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 }
 
@@ -238,10 +253,8 @@ int main(int argc, char const* argv[])
     grid->setStartCell(START_X, START_Y);
     grid->setEndCell(END_X, END_Y);
 
-    std::vector<std::pair<int, int>> path;
-
-    std::thread render_grid_thread(renderGrid, std::ref(window), grid);
-    //std::thread render_path_thread(renderPath, std::ref(window), grid);
+    std::thread render_thread(render, std::ref(window), grid);
+    std::thread path_thread(buildPath, grid);
 
     // Event handling in main thread.
     while (window.isOpen())
@@ -266,8 +279,8 @@ int main(int argc, char const* argv[])
         }
     }
 
-    render_grid_thread.join();
-    //render_path_thread.join();
+    render_thread.join();
+    path_thread.join();
 
     return 0;
 }
