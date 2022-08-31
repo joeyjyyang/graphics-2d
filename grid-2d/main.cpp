@@ -3,6 +3,7 @@
 #include <climits>
 #include <iostream>
 #include <mutex>
+#include <queue>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -90,7 +91,7 @@ public:
 
                 weight_text.setFont(font_);
                 weight_text.setString(std::to_string(weight));
-                weight_text.setFillColor(sf::Color::Blue);
+                weight_text.setFillColor(sf::Color::Black);
                 weight_text.setCharacterSize(16);
                 weight_text.setPosition(cell_position.x, cell_position.y);
 
@@ -239,6 +240,24 @@ void buildPath(std::shared_ptr<Grid> grid)
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 }
+
+void dijkstra()
+{
+    std::priority_queue<std::pair<int, std::pair<int, int>>, std::vector<std::pair<int, std::pair<int, int>>>, std::greater<std::pair<int, std::pair<int, int>>>> priority_q;
+
+    priority_q.push({2000, {99, 100}});
+    priority_q.push({1, {1, 30}});
+    priority_q.push({300, {9, 200}});
+    priority_q.push({99, {91, 200}});
+
+    while (!priority_q.empty()) 
+    {
+        std::cout << priority_q.top().first << ' ';
+        priority_q.pop();
+    }
+    std::cout << '\n';
+}
+
 
 int main(int argc, char const* argv[])
 {
