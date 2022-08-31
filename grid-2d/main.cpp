@@ -193,6 +193,8 @@ void render(sf::RenderWindow& window, const std::shared_ptr<Grid> grid)
     {
         window.clear();
 
+        MTX.lock();
+
         for (unsigned int i = 0; i < NUM_ROWS; i++)
         {
             for (unsigned int j = 0; j < NUM_COLS; j++)
@@ -210,6 +212,8 @@ void render(sf::RenderWindow& window, const std::shared_ptr<Grid> grid)
             }
         }
 
+        MTX.unlock();
+
         window.display();
     }
 }
@@ -221,12 +225,17 @@ void buildPath(std::shared_ptr<Grid> grid)
 {
     while (true)
     {
+        MTX.lock();
+
         grid->addPath(a, b);
         a++;
         b++;
 
         std::cout << a;
         std::cout << b;
+
+        MTX.unlock();
+
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 }
