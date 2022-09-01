@@ -194,7 +194,7 @@ void render(sf::RenderWindow& window, const std::shared_ptr<Grid> grid)
     {
         window.clear();
 
-        MTX.lock();
+        const std::lock_guard<std::mutex> lock(MTX);
 
         for (unsigned int i = 0; i < NUM_ROWS; i++)
         {
@@ -213,8 +213,6 @@ void render(sf::RenderWindow& window, const std::shared_ptr<Grid> grid)
             }
         }
 
-        MTX.unlock();
-
         window.display();
     }
 }
@@ -222,30 +220,48 @@ void render(sf::RenderWindow& window, const std::shared_ptr<Grid> grid)
 // TO DO: Implement Dijkstra's here.
 unsigned int a = 1;
 unsigned int b = 1;
-void buildPath(std::shared_ptr<Grid> grid)
+void buildPath(const std::shared_ptr<Grid> grid)
 {
     while (true)
     {
-        MTX.lock();
+        {
+            const std::lock_guard<std::mutex> lock(MTX);
 
-        grid->addPath(a, b);
-        a++;
-        b++;
-
-        std::cout << a;
-        std::cout << b;
-
-        MTX.unlock();
-
+            grid->addPath(a, b);
+            a++;
+            b++;
+        }
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 }
 
-void dijkstra()
+void dijkstra(const std::shared_ptr<Grid> grid)
 {
+    std::cout << "Test";
+
+    std::vector<std::pair<int, int>> moves = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
     std::priority_queue<std::pair<int, std::pair<int, int>>, std::vector<std::pair<int, std::pair<int, int>>>, std::greater<std::pair<int, std::pair<int, int>>>> priority_q;
 
-    priority_q.push({2000, {99, 100}});
+    priority_q.push({0, {START_X, START_Y}});
+
+    while (true)
+    {
+        std::cout << "Test";
+
+        //auto cell = priority_q.top();
+        //priority_q.pop();
+
+        /*auto& 
+
+        // Add neighbouring cells.
+        for (unsigned int i = 0; i < moves.size(); i++)
+        {
+            priority_q.push({});
+        }*/
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
+    /*priority_q.push({2000, {99, 100}});
     priority_q.push({1, {1, 30}});
     priority_q.push({300, {9, 200}});
     priority_q.push({99, {91, 200}});
@@ -255,7 +271,7 @@ void dijkstra()
         std::cout << priority_q.top().first << ' ';
         priority_q.pop();
     }
-    std::cout << '\n';
+    std::cout << '\n';*/
 }
 
 
@@ -283,6 +299,7 @@ int main(int argc, char const* argv[])
 
     std::thread render_thread(render, std::ref(window), grid);
     std::thread path_thread(buildPath, grid);
+    //std::thread dijkstra_thread(dijkstra, grid);
 
     // Event handling in main thread.
     while (window.isOpen())
@@ -306,9 +323,10 @@ int main(int argc, char const* argv[])
             }
         }
     }
-
+    
     render_thread.join();
     path_thread.join();
+    //dijkstra_thread.join();
 
     return 0;
 }
