@@ -222,7 +222,9 @@ unsigned int a = 1;
 unsigned int b = 1;
 void buildPath(const std::shared_ptr<Grid> grid)
 {
-    while (true)
+    unsigned int num_cells = 4;
+    
+    for (unsigned int i = 0; i < num_cells; i++)
     {
         {
             const std::lock_guard<std::mutex> lock(MTX);
