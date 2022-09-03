@@ -7,7 +7,7 @@ constexpr unsigned int NUM_ROWS{5};
 constexpr unsigned int NUM_COLS{5};
 constexpr unsigned int SRC_ROW{1};
 constexpr unsigned int SRC_COL{2};
-constexpr unsigned int DEST_ROW{2};
+constexpr unsigned int DEST_ROW{4};
 constexpr unsigned int DEST_COL{4};
 constexpr unsigned int SRC_WEIGHT{0};
 
@@ -27,6 +27,21 @@ void printMatrix(std::vector<std::vector<T>>& matrix)
     }
 }
 
+void printMatrix(std::vector<std::vector<std::pair<unsigned int, unsigned int>>>& matrix)
+{
+    const unsigned int num_rows  = matrix.size();
+    const unsigned int num_cols = matrix[0].size();
+
+    for (unsigned int r_i = 0; r_i < num_rows; r_i++)
+    {
+        for (unsigned int c_i = 0; c_i < num_cols; c_i++)
+        {
+            std::cout << "(" << matrix[r_i][c_i].first << ", " << matrix[r_i][c_i].second << ") ";
+        }
+        std::cout << "\n";
+    }
+}
+
 int main() {
     std::vector<std::pair<int, int>> moves = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
@@ -36,7 +51,7 @@ int main() {
     // Dijkstra's does not work on non-negative weighted graphs; therefore, weights cannot be negative!
     std::vector<std::vector<unsigned int>> weights(NUM_ROWS, std::vector<unsigned int>(NUM_COLS, UINT_MAX));
     std::vector<std::vector<bool>> visited(NUM_ROWS, std::vector<bool>(NUM_COLS, false));
-    std::vector<std::vector<std::pair<unsigned int, unsigned int>>> previous(NUM_ROWS, std::vector<std::pair<unsigned int, unsigned int>>(NUM_COLS, {UINT_MAX, UINT_MAX}));
+    std::vector<std::vector<std::pair<unsigned int, unsigned int>>> previous(NUM_ROWS, std::vector<std::pair<unsigned int, unsigned int>>(NUM_COLS, {0, 0}));
 
     // Initialize source vertex.
     grid[SRC_ROW][SRC_COL] = 'a';
@@ -50,6 +65,8 @@ int main() {
     printMatrix(weights);
     std::cout << "--------\n";
     printMatrix(visited);
+    std::cout << "--------\n";
+    printMatrix(previous);
     std::cout << "--------\n";
 
     priority_q.push({SRC_WEIGHT, {SRC_ROW, SRC_COL}});
@@ -82,6 +99,7 @@ int main() {
                     if (new_weight < adj_vertex_weight)
                     {
                         weights[adj_vertex_r_i][adj_vertex_c_i] = new_weight;
+                        previous[adj_vertex_r_i][adj_vertex_c_i] = {current_r_i, current_c_i};
                         priority_q.push({new_weight, {adj_vertex_r_i, adj_vertex_c_i}});
                     }
                 }
@@ -94,6 +112,8 @@ int main() {
     printMatrix(weights);
     std::cout << "--------\n";
     printMatrix(visited);
+    std::cout << "--------\n";
+    printMatrix(previous);
     std::cout << "--------\n";
 
     return 0;
