@@ -1,7 +1,10 @@
+// A grid is basically an undirected, weighted graph where all edge weights between adjacent vertices are 1.
+
+#include <algorithm>
 #include <climits>
+#include <iostream>
 #include <queue>
 #include <vector>
-#include <iostream>
 
 constexpr unsigned int NUM_ROWS{5};
 constexpr unsigned int NUM_COLS{5};
@@ -23,11 +26,12 @@ void printMatrix(std::vector<std::vector<T>>& matrix)
         {
             std::cout << matrix[r_i][c_i] << " ";
         }
+
         std::cout << "\n";
     }
 }
 
-void printMatrix(std::vector<std::vector<std::pair<unsigned int, unsigned int>>>& matrix)
+void printMatrix(std::vector<std::vector<std::pair<int, int>>>& matrix)
 {
     const unsigned int num_rows  = matrix.size();
     const unsigned int num_cols = matrix[0].size();
@@ -38,8 +42,19 @@ void printMatrix(std::vector<std::vector<std::pair<unsigned int, unsigned int>>>
         {
             std::cout << "(" << matrix[r_i][c_i].first << ", " << matrix[r_i][c_i].second << ") ";
         }
+
         std::cout << "\n";
     }
+}
+
+void printPath(std::vector<std::pair<unsigned int, unsigned int>>& path)
+{
+    for (unsigned int i = 0; i < path.size(); i++)
+    {
+        std::cout << "(" << path[i].first << ", " << path[i].second << ") -> ";
+    }
+
+    std::cout << "\n";
 }
 
 int main() {
@@ -51,7 +66,7 @@ int main() {
     // Dijkstra's does not work on non-negative weighted graphs; therefore, weights cannot be negative!
     std::vector<std::vector<unsigned int>> weights(NUM_ROWS, std::vector<unsigned int>(NUM_COLS, UINT_MAX));
     std::vector<std::vector<bool>> visited(NUM_ROWS, std::vector<bool>(NUM_COLS, false));
-    std::vector<std::vector<std::pair<unsigned int, unsigned int>>> previous(NUM_ROWS, std::vector<std::pair<unsigned int, unsigned int>>(NUM_COLS, {0, 0}));
+    std::vector<std::vector<std::pair<int, int>>> previous(NUM_ROWS, std::vector<std::pair<int, int>>(NUM_COLS, {-1, -1}));
 
     // Initialize source vertex.
     grid[SRC_ROW][SRC_COL] = 'a';
@@ -115,6 +130,26 @@ int main() {
     std::cout << "--------\n";
     printMatrix(previous);
     std::cout << "--------\n";
+
+    // Get shortest path.
+    std::vector<std::pair<unsigned int, unsigned int>> shortest_path;
+
+    shortest_path.push_back({DEST_ROW, DEST_COL});
+    auto current_r_i{DEST_ROW};
+    auto current_c_i{DEST_COL};
+
+    while (current_r_i != SRC_ROW || current_c_i != SRC_COL)
+    {
+        shortest_path.push_back({previous[current_r_i][current_c_i].first, previous[current_r_i][current_c_i].second});
+        auto temp_r_i = previous[current_r_i][current_c_i].first;
+        auto temp_c_i = previous[current_r_i][current_c_i].second;
+        current_r_i = temp_r_i;
+        current_c_i = temp_c_i;
+    }
+
+    std::reverse(shortest_path.begin(), shortest_path.end());
+
+    printPath(shortest_path);
 
     return 0;
 }
