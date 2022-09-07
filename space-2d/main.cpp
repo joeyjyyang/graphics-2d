@@ -117,7 +117,7 @@ void renderThread(sf::RenderWindow& window, sf::Clock& clock, const std::vector<
     }
 }
 
-int main(int argc, char const* argv[])
+int main(int argc, char* argv[])
 {
     // Breaks cross-platform support! 
     // Is not reliable, but sometimes needs to calledso X is aware that this is a multi-threaded application.
