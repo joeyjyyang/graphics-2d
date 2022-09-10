@@ -57,7 +57,8 @@ void printPath(std::vector<std::pair<unsigned int, unsigned int>>& path)
     std::cout << "\n";
 }
 
-int main() {
+int main(int argc, char* argv[])
+{
     std::vector<std::pair<int, int>> moves = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
     std::priority_queue<std::pair<unsigned int, std::pair<unsigned int, unsigned int>>, std::vector<std::pair<unsigned int, std::pair<unsigned int, unsigned int>>>, std::greater<std::pair<unsigned int, std::pair<unsigned int, unsigned int>>>> priority_q;
