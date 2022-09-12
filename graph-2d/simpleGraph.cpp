@@ -9,7 +9,8 @@ using EdgeWeight = unsigned int;
 // Vector indices represent VertexId.
 using EdgeList = std::vector<EdgeWeight>;
 
-using AdjacencyList = std::unordered_map<VertexId, EdgeList>;
+// Vector indices represent VertexId.
+using AdjacencyList = std::vector<EdgeList>;
 
 // This is minimalistically correct.
 //using Graph = AdjacencyList;

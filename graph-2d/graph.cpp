@@ -17,6 +17,7 @@ struct Edge
 };
 
 using EdgeList = std::vector<Edge>;
+// using EdgeList = std::unordered_map<VertexId, EdgeWeight>;
 
 using AdjacencyList = std::unordered_map<VertexId, EdgeList>;
 
