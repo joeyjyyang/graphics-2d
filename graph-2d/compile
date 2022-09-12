@@ -1,2 +1,1 @@
 g++ graph.cpp -o graph
-g++ simpleGraph.cpp -o simpleGraph
