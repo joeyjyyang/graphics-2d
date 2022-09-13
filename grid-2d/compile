@@ -1,1 +1,2 @@
 g++ main.cpp -o main -lsfml-graphics -lsfml-window -lsfml-system -lpthread -lX11
+g++ dijkstraGrid.cpp -o dijkstraGrid

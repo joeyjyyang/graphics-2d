@@ -1,1 +1,1 @@
-g++ graph.cpp -o graph
+g++ -std=c++2a dijkstra.cpp -o dijkstra
