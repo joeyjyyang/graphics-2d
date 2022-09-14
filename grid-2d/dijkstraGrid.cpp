@@ -64,21 +64,20 @@ int main(int argc, char* argv[])
     std::priority_queue<std::pair<unsigned int, std::pair<unsigned int, unsigned int>>, std::vector<std::pair<unsigned int, std::pair<unsigned int, unsigned int>>>, std::greater<std::pair<unsigned int, std::pair<unsigned int, unsigned int>>>> priority_q;
 
     std::vector<std::vector<char>> grid(NUM_ROWS, std::vector<char>(NUM_COLS, 'o'));
-    // Dijkstra's does not work on non-negative weighted graphs; therefore, weights cannot be negative!
-    std::vector<std::vector<unsigned int>> weights(NUM_ROWS, std::vector<unsigned int>(NUM_COLS, UINT_MAX));
+    std::vector<std::vector<unsigned int>> distances(NUM_ROWS, std::vector<unsigned int>(NUM_COLS, UINT_MAX));
     std::vector<std::vector<bool>> visited(NUM_ROWS, std::vector<bool>(NUM_COLS, false));
     std::vector<std::vector<std::pair<int, int>>> previous(NUM_ROWS, std::vector<std::pair<int, int>>(NUM_COLS, {-1, -1}));
 
     // Initialize source vertex.
     grid[SRC_ROW][SRC_COL] = 'a';
-    weights[SRC_ROW][SRC_COL] = SRC_WEIGHT;
+    distances[SRC_ROW][SRC_COL] = SRC_WEIGHT;
 
     // Initialize destination vertex.
     grid[DEST_ROW][DEST_COL] = 'z';
 
     printMatrix(grid);
     std::cout << "--------\n";
-    printMatrix(weights);
+    printMatrix(distances);
     std::cout << "--------\n";
     printMatrix(visited);
     std::cout << "--------\n";
@@ -108,13 +107,13 @@ int main(int argc, char* argv[])
                 // Make sure adjacent vertex is unvisited.
                 if (!visited[adj_vertex_r_i][adj_vertex_c_i])
                 {
-                    auto adj_vertex_weight = weights[adj_vertex_r_i][adj_vertex_c_i];
+                    auto adj_vertex_weight = distances[adj_vertex_r_i][adj_vertex_c_i];
                     auto new_weight = current_weight + 1; // Edge weight between adjacent vertices is always 1.
 
                     // Found new shortest path from source vertex, through current vertex, to adjacent vertex.
                     if (new_weight < adj_vertex_weight)
                     {
-                        weights[adj_vertex_r_i][adj_vertex_c_i] = new_weight;
+                        distances[adj_vertex_r_i][adj_vertex_c_i] = new_weight;
                         previous[adj_vertex_r_i][adj_vertex_c_i] = {current_r_i, current_c_i};
                         priority_q.push({new_weight, {adj_vertex_r_i, adj_vertex_c_i}});
                     }
@@ -125,7 +124,7 @@ int main(int argc, char* argv[])
 
     printMatrix(grid);
     std::cout << "--------\n";
-    printMatrix(weights);
+    printMatrix(distances);
     std::cout << "--------\n";
     printMatrix(visited);
     std::cout << "--------\n";
