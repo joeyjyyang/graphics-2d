@@ -8,114 +8,120 @@
 
 #include "graph.cpp"
 
-constexpr unsigned int SRC_ID{1};
-constexpr unsigned int DEST_ID{9};
-constexpr unsigned int SRC_WEIGHT{0};
+template <typename T>
+void printPath(std::vector<T>& path)
+{
+    for (unsigned int i = 0; i < path.size(); i++)
+    {
+        std::cout << path[i] << "-> ";
+    }
+
+    std::cout << "\n";
+}
+
+constexpr VertexId<char> SRC_ID{'a'};
+constexpr VertexId<char> DEST_ID{'c'};
+constexpr EdgeWeight<unsigned int> SRC_DISTANCE{0};
 
 int main(int argc, char* argv[])
 {
     // Non-negative weights.
     Graph<char, unsigned int> graph;
 
-    graph.addEdge('a', 'b', 5);
-    graph.addEdge('c', 'a', 8);
-    graph.addEdge('c', 'h', 10);
-    graph.addEdge('z', 'd', 2);
-    graph.addBidirectionalEdge('a', 'z', 12);
+    graph.addBidirectionalEdge('a', 'd', 1);
+    graph.addBidirectionalEdge('a', 'b', 6);
+    graph.addBidirectionalEdge('b', 'd', 2);
+    graph.addBidirectionalEdge('d', 'e', 1);
+    graph.addBidirectionalEdge('b', 'e', 2);
+    graph.addBidirectionalEdge('b', 'c', 5);
+    graph.addBidirectionalEdge('e', 'c', 5);
 
+    std::cout << "-----------------------\n";
     printGraph(graph);
+    std::cout << "-----------------------\n";
 
-    /*std::priority_queue<std::pair<EdgeWeight, VertexId>, std::vector<std::pair<EdgeWeight, VertexId>>, std::greater<std::pair<EdgeWeight, VertexId>>> priority_q;
+    std::priority_queue<std::pair<EdgeWeight<unsigned int>, VertexId<char>>, std::vector<std::pair<EdgeWeight<unsigned int>, VertexId<char>>>, std::greater<std::pair<EdgeWeight<unsigned int>, VertexId<char>>>> priority_q;
 
-    // Build graph.
-    //std::vector<std::vector<char>> grid(NUM_ROWS, std::vector<char>(NUM_COLS, 'o'));
-    // Dijkstra's does not work on non-negative weighted graphs; therefore, weights cannot be negative!
-    std::vector<std::vector<unsigned int>> weights(NUM_ROWS, std::vector<unsigned int>(NUM_COLS, UINT_MAX));
-    std::vector<std::vector<bool>> visited(NUM_ROWS, std::vector<bool>(NUM_COLS, false));
-    std::vector<std::vector<std::pair<int, int>>> previous(NUM_ROWS, std::vector<std::pair<int, int>>(NUM_COLS, {-1, -1}));
+    std::unordered_map<VertexId<char>, EdgeWeight<unsigned int>> distances;
+    std::unordered_map<VertexId<char>, bool> visited;
+    std::unordered_map<VertexId<char>, VertexId<char>> previous;
 
-    // Initialize source vertex.
-    grid[SRC_ROW][SRC_COL] = 'a';
-    weights[SRC_ROW][SRC_COL] = SRC_WEIGHT;
+    const auto& vertices = graph.getVertices();
 
-    // Initialize destination vertex.
-    grid[DEST_ROW][DEST_COL] = 'z';
+    for (const auto& src_id : vertices)
+    {
+        distances[src_id] = UINT_MAX;
+        visited[src_id] = false;
+    }
 
-    printMatrix(grid);
-    std::cout << "--------\n";
-    printMatrix(weights);
-    std::cout << "--------\n";
-    printMatrix(visited);
-    std::cout << "--------\n";
-    printMatrix(previous);
-    std::cout << "--------\n";
+    distances[SRC_ID] = 0;
 
-    priority_q.push({SRC_WEIGHT, {SRC_ROW, SRC_COL}});
+    priority_q.emplace(SRC_DISTANCE, SRC_ID);
 
     while (!priority_q.empty())
     {
-        auto current_vertex = priority_q.top();
+        const auto current_vertex = priority_q.top();
         priority_q.pop();
-        auto current_weight = current_vertex.first;
-        auto current_r_i = current_vertex.second.first;
-        auto current_c_i = current_vertex.second.second;
-        visited[current_r_i][current_c_i] = true;
 
-        // Find all adjacent vertices.
-        for (unsigned int i = 0; i < moves.size(); i++)
+        const auto current_distance = current_vertex.first;
+        const auto current_id = current_vertex.second;
+
+        visited[current_id] = true;
+
+        const auto& edges = graph.getEdges(current_id);
+
+        for (const auto& [adj_id, adj_distance] : edges)
         {
-            auto adj_vertex_r_i = current_r_i + moves[i].first;
-            auto adj_vertex_c_i = current_c_i + moves[i].second;
-
-            // Make sure adjacent vertex is within bounds.
-            if (adj_vertex_r_i >= 0 && adj_vertex_r_i < NUM_ROWS && adj_vertex_c_i >= 0 && adj_vertex_c_i < NUM_COLS)
+            // Make sure adjacent vertex is unvisited.
+            if (!visited[adj_id])
             {
-                // Make sure adjacent vertex is unvisited.
-                if (!visited[adj_vertex_r_i][adj_vertex_c_i])
-                {
-                    auto adj_vertex_weight = weights[adj_vertex_r_i][adj_vertex_c_i];
-                    auto new_weight = current_weight + 1; // Edge weight between adjacent vertices is always 1.
+                auto distance = distances[adj_id];
+                auto new_distance = current_distance + adj_distance;
 
-                    // Found new shortest path from source vertex, through current vertex, to adjacent vertex.
-                    if (new_weight < adj_vertex_weight)
-                    {
-                        weights[adj_vertex_r_i][adj_vertex_c_i] = new_weight;
-                        previous[adj_vertex_r_i][adj_vertex_c_i] = {current_r_i, current_c_i};
-                        priority_q.push({new_weight, {adj_vertex_r_i, adj_vertex_c_i}});
-                    }
+                // Found new shortest path from source vertex, through current vertex, to adjacent vertex.
+                if (new_distance < distance)
+                {
+                    distances[adj_id] = new_distance;
+                    previous[adj_id] = current_id;
+                    priority_q.emplace(new_distance, adj_id);
                 }
             }
         }
     }
 
-    printMatrix(grid);
-    std::cout << "--------\n";
-    printMatrix(weights);
-    std::cout << "--------\n";
-    printMatrix(visited);
-    std::cout << "--------\n";
-    printMatrix(previous);
-    std::cout << "--------\n";
+    for (const auto& [key, val] : visited)
+    {
+        std::cout << key << ": " << val << ", ";
+    }
+    std::cout << "\n";
+
+    for (const auto& [key, val] : distances)
+    {
+        std::cout << key << ": " << val << ", ";
+    }
+    std::cout << "\n";
+
+    for (const auto& [key, val] : previous)
+    {
+        std::cout << key << ": " << val << ", ";
+    }
+    std::cout << "\n";
 
     // Get shortest path.
-    std::vector<std::pair<unsigned int, unsigned int>> shortest_path;
+    std::vector<VertexId<char>> shortest_path;
 
-    shortest_path.push_back({DEST_ROW, DEST_COL});
-    auto current_r_i{DEST_ROW};
-    auto current_c_i{DEST_COL};
+    shortest_path.emplace_back(DEST_ID);
+    auto current_id{DEST_ID};
 
-    while (current_r_i != SRC_ROW || current_c_i != SRC_COL)
+    while (current_id != SRC_ID)
     {
-        shortest_path.push_back({previous[current_r_i][current_c_i].first, previous[current_r_i][current_c_i].second});
-        auto temp_r_i = previous[current_r_i][current_c_i].first;
-        auto temp_c_i = previous[current_r_i][current_c_i].second;
-        current_r_i = temp_r_i;
-        current_c_i = temp_c_i;
+        shortest_path.emplace_back(previous[current_id]);
+        current_id = previous[current_id];
     }
 
     std::reverse(shortest_path.begin(), shortest_path.end());
 
-    printPath(shortest_path);*/
+    printPath(shortest_path);
 
     return 0;
 }
