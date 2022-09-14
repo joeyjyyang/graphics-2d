@@ -10,10 +10,10 @@ template <typename T>
 using EdgeWeight = T;
 
 template <typename TId, typename TWeight>
-using EdgeList = std::unordered_map<VertexId<TId>, EdgeWeight<TWeight>>;
+using Edges = std::unordered_map<VertexId<TId>, EdgeWeight<TWeight>>;
 
 template <typename TId, typename TWeight>
-using AdjacencyList = std::unordered_map<VertexId<TId>, EdgeList<TId, TWeight>>;
+using AdjacencyList = std::unordered_map<VertexId<TId>, Edges<TId, TWeight>>;
 
 // This is minimalistically correct.
 //template <typename TId, typename TWeight>
@@ -43,6 +43,29 @@ public:
     {
         addEdge(src_id, dest_id, weight);
         addEdge(dest_id, src_id, weight);
+    }
+
+    const Edges<TId, TWeight>& getEdges(const VertexId<TId> src_id) const
+    {
+        // Unnecessary since cannot add vertex without edge to graph anyways.
+        //if (!graph_.contains(src_id))
+        //{
+        //    throw std::invalid_argument("Cannot find edges for vertex. Vertex does not exist!");  
+        //}
+
+        return graph_.at(src_id);
+    }
+
+    const std::vector<VertexId<TId>> getVertices() const
+    {
+        std::vector<VertexId<TId>> vertices;
+
+        for (auto const& [src_id , weight] : graph_)
+        {
+            vertices.emplace_back(src_id);
+        }
+
+        return vertices;
     }
 
     // Unnecessary to expose in API.
