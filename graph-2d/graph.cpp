@@ -29,14 +29,11 @@ public:
 
     void addEdge(const VertexId<TId> src_id, const VertexId<TId> dest_id, const EdgeWeight<TWeight> weight)
     {
-        // Source vertex with edge(s) already exists in graph.
-        if (graph_.contains(src_id))
+        // Source vertex with edge(s) already exists in graph, and
+        // destination vertex from source vertex already exists.
+        if (graph_.contains(src_id) && graph_[src_id].contains(dest_id))
         {
-            // Destination vertex from source vertex already exists.
-            if (graph_[src_id].contains(dest_id))
-            {
-                throw std::invalid_argument("Could not add edge to vertex. Edge already exists!");
-            }
+            throw std::invalid_argument("Could not add edge to vertex. Edge already exists!");
         }
 
         graph_[src_id].emplace(dest_id, weight);
