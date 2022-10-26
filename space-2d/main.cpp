@@ -166,7 +166,7 @@ int main(int argc, char* argv[])
                     // Critical section; shared resource being planets.
                     const std::lock_guard<std::mutex> lock(MTX);
                     // Move ownership of std::unique_ptr; cannot copy!
-                    planets.push_back(std::move(planet));
+                    planets.emplace_back(std::move(planet));
                     break;
                 }
 
